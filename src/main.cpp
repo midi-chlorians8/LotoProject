@@ -6,6 +6,12 @@ const int8_t pinButtonStart = 4;
 
 const int8_t pinIrBallDetector = 8;
 
+
+enum StatesEndTime{
+  NoEnded,
+  Ended,
+} states;
+
 class Relays{
 private:
   const int8_t releElektromagnet = 7;
@@ -25,7 +31,7 @@ private:
   bool firsTimeZamerPitDvigRele=false;
   unsigned long timingPitDvigRele;
 
-  bool rele2WorkEnd = false;
+  bool timeTickAftherActivatRele2End = false;
   // Переменные реле Питания Двигателя #2
 
   // Переменные реле MoreSpeedRele #3
@@ -34,7 +40,16 @@ private:
   bool firsTimeZamerMoreSpeedRele=false;
   unsigned long timingMoreSpeedRele;
   // Переменные реле MoreSpeedRele #3
- 
+  
+  // Переменные для отсчёта времени после завершения работы MoreSpeedRele #3 CountTimeAfthRele3
+  int delayCountTimeAfthRele3 = 10000;
+  bool canOnCountTimeAfthRele3 = true;
+  bool firsTimeZamerCountTimeAfthRele3=false;
+  unsigned long timingCountTimeAfthRele3;
+
+  bool rele3WorkEnd = false;
+  // Переменные для отсчёта времени после завершения работы MoreSpeedRele #3
+  bool canReadGerkonAndIR = false;
 public:
   Relays()
   {
@@ -56,33 +71,39 @@ public:
       }
     }
   }
-  void OnPitDvigRele(int delayPitDvigReleWork){
+  void OnPitDvigRele(){
+  
+        digitalWrite(relePitDvig,HIGH);
+       
+  }
+  StatesEndTime CountTimeAftherOnPitDvigRele(int delayPitDvigReleWork){
     if(canOnPitDvigRele == true){
       if(firsTimeZamerPitDvigRele == false){ // Захватили момет старт отсчёта для 500мсек
-        digitalWrite(relePitDvig,HIGH);
-        timingPitDvigRele = millis();
+
+            timingPitDvigRele = millis();
         firsTimeZamerPitDvigRele = true;
+        
       }  
       if(millis() - timingPitDvigRele > delayPitDvigReleWork){
         //digitalWrite(relePitDvig,LOW);
         canOnPitDvigRele = false;
-        rele2WorkEnd = true;
+        timeTickAftherActivatRele2End = true;
+        
       }
     }
-  }
-  bool GetPitDvigReleEnd(){
-    if(rele2WorkEnd == true){
-      return true;
+    if(timeTickAftherActivatRele2End ==true){
+      return Ended;
     }
     else{
-      return false;
+      return NoEnded;
     }
   }
+
   void OnMoreSpeedRele(int delayMoreSpeedReleWork){
       if(canOnMoreSpeedRele == true){
           if(firsTimeZamerMoreSpeedRele == false){ // Захватили момет старт отсчёта 
-            digitalWrite(releMoreSpeed,LOW);//digitalWrite(releMoreSpeed,HIGH);
-            timingMoreSpeedRele = millis();
+                digitalWrite(releMoreSpeed,LOW);//digitalWrite(releMoreSpeed,HIGH);
+                timingMoreSpeedRele = millis();
             firsTimeZamerMoreSpeedRele = true;
           }  
           if(millis() - timingMoreSpeedRele > delayMoreSpeedReleWork){
@@ -91,16 +112,100 @@ public:
           }
     }
   }
+bool OnMoreSpeedReleWorkEnd(){
+  if(canOnMoreSpeedRele == false){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+  StatesEndTime CountTimeAftherRele3Activated(int delayCountTimeAfthRele3){
+    if(canOnCountTimeAfthRele3 == true){
+      if(firsTimeZamerCountTimeAfthRele3 == false){ // Захватили момет старт отсчёта для 500мсек
+
+        timingCountTimeAfthRele3 = millis();
+        firsTimeZamerCountTimeAfthRele3 = true;
+        
+      }  
+      if(millis() - timingCountTimeAfthRele3 > delayCountTimeAfthRele3){
+        //digitalWrite(relePitDvig,LOW);
+        canOnCountTimeAfthRele3 = false;
+        rele3WorkEnd = true;
+        
+      }
+    }
+    if(rele3WorkEnd ==true){
+      return Ended;
+    }
+    else{
+      return NoEnded;
+    }
+  }
+
+
+
   void ResetRelaysSetting(){
     canOnElektromagnetRele = true;
-    canOnPitDvigRele = true;
-    canOnMoreSpeedRele = true;
+    firsTimeZamerElektromagnetRele = false;
 
-    rele2WorkEnd = false;
+    canOnPitDvigRele = true;
+    firsTimeZamerPitDvigRele = false;
+
+    canOnMoreSpeedRele = true;
+    firsTimeZamerMoreSpeedRele = false;
+
+    timeTickAftherActivatRele2End = false;
+    firsTimeZamerCountTimeAfthRele3 = false;
+
+    canOnCountTimeAfthRele3 = true;
+    rele3WorkEnd = false;
+
+    digitalWrite(relePitDvig,LOW);
   }
 };
 Relays *MyRelaysPtr = nullptr; // Cоздали указатель
 
+class SensorShare{
+private:
+  int sharCount = 0;
+  bool canRead=true;
+  bool isBeTimeZaxvat = false;
+  unsigned long timingSensorWait=0;
+public:
+  void IrSensorRead(){
+    //Если прочитан шар перед датчиком
+    //Прибавить к счётчику шаров +1
+    //Подождать 500 мсек до следущего считывания 
+    if(canRead == true){
+      if( digitalRead(pinIrBallDetector)== 0){
+
+            sharCount++;
+            Serial.print("sharCount:"); Serial.println(sharCount);
+            //Один раз захват текущее время
+            if(isBeTimeZaxvat == false){
+                  timingSensorWait = millis(); canRead = false;
+              isBeTimeZaxvat = true;
+            }
+            //Один раз захват текущее время            //  c
+      }
+      
+      
+    }
+    if(millis() - timingSensorWait > 500 and canRead == false){
+      canRead = true;
+      isBeTimeZaxvat = false;
+    }
+  }
+  int GetShareCount(){
+    return sharCount;
+  }
+  void ResetShareCount(){
+    sharCount=0;
+  }
+};
+SensorShare *MySensorSharePtr = nullptr; // Cоздали указатель
 void setup() {
      //pinMode(10, OUTPUT);  digitalWrite(10, HIGH);   // turn the LED on (HIGH is the voltage level)
 
@@ -115,50 +220,74 @@ void setup() {
   //InitMyServo(); // Создали обьект в области оперативной памяти куча heap
   MyUserServoPtr = new MyUserServo_Gercon(); // Создали обьект в области оперативной памяти куча heap
   MyRelaysPtr = new Relays(); // Создали обьект в области оперативной памяти куча heap
-
+  MySensorSharePtr= new SensorShare(); // Создали обьект в области оперативной памяти куча heap
  
 }
  
 bool start = false;
-int sharCount = 0;
+
 void loop() {
-  /*
-  Serial.print("Button:");
-  Serial.print(digitalRead(pinButtonStart));
-
-  Serial.print(" pinIrBallDetector:");
-  Serial.print(digitalRead(pinIrBallDetector));
-*/
-
- // Serial.print(" Gerkon:");  Serial.print(digitalRead(pinGerkon));
-  MyUserServoPtr->ReadGerkon();
-  MyUserServoPtr->DjigDjig();
-
-
-
-  if(digitalRead(pinIrBallDetector)==0){
-    sharCount++;  //Serial.print(" sharCount:");  Serial.print(sharCount);  Serial.println();
-  }
-
-
-
 
   if(digitalRead(pinButtonStart)==0){
     start = true;
   }
   if(start == true){
       MyRelaysPtr->OnElektromagnetRele(500);
-      MyRelaysPtr->OnPitDvigRele(20000);
-      if(MyRelaysPtr->GetPitDvigReleEnd() == true){
-          MyRelaysPtr->OnMoreSpeedRele(30000);
-      }
-    Serial.print(" GetPitDvigReleEnd():");
-    Serial.print(MyRelaysPtr->GetPitDvigReleEnd() );
 
-    Serial.print(" pinIrBallDetector:");
-    Serial.print(digitalRead(pinIrBallDetector));
-    Serial.println();
+      MyRelaysPtr->OnPitDvigRele();
+      MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000);
+
+  if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000) == Ended){
+      MyRelaysPtr->OnMoreSpeedRele(30000);
   }
+
+
+
+if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
+  if(MyRelaysPtr->CountTimeAftherRele3Activated(10000) == Ended){
+        Serial.println("I read sensors");
+
+        MySensorSharePtr->IrSensorRead();
+        MyUserServoPtr->ReadGerkon();
+        MyUserServoPtr->DjigDjig();
+
+        if(MySensorSharePtr->GetShareCount() == 4){
+          //Всё ресет
+          MySensorSharePtr->ResetShareCount();
+          MyRelaysPtr->ResetRelaysSetting();
+          MyUserServoPtr->ResetMooveServo();
+          start = false;
+        }
+  }
+}
+
+  }
+
+
+}
+
+
+
+
+
+
+
+
+//MySensorSharePtr->IrSensorRead();
+
+  //Serial.print(" pinIrBallDetector:");
+  //Serial.print(digitalRead(pinIrBallDetector));
+  // Serial.println();
+
+
+
+
+/*
+  if(digitalRead(pinIrBallDetector)==0){
+    sharCount++;  //Serial.print(" sharCount:");  Serial.print(sharCount);  Serial.println();
+  }
+*/
+
   //  Serial.print(" Gerkon:");
   // put your main code here, to run repeatedly:
   /*
@@ -184,4 +313,9 @@ void loop() {
   MyRelaysPtr->OnrelePitDvig();
   */
 
-}
+     //Serial.print(" GetPitDvigReleEnd():");
+    //Serial.print(MyRelaysPtr->GetPitDvigReleEnd() );
+
+    //Serial.print(" pinIrBallDetector:");
+    //Serial.print(digitalRead(pinIrBallDetector));
+    //Serial.println();
