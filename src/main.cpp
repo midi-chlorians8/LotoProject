@@ -207,8 +207,7 @@ public:
 };
 SensorShare *MySensorSharePtr = nullptr; // Cоздали указатель
 void setup() {
-     //pinMode(10, OUTPUT);  digitalWrite(10, HIGH);   // turn the LED on (HIGH is the voltage level)
-
+  //pinMode(10, OUTPUT);  digitalWrite(10, HIGH);   // turn the LED on (HIGH is the voltage level)
    
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -237,32 +236,29 @@ void loop() {
       MyRelaysPtr->OnPitDvigRele();
       MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000);
 
-  if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000) == Ended){
-      MyRelaysPtr->OnMoreSpeedRele(30000);
-  }
+      if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000) == Ended){
+          MyRelaysPtr->OnMoreSpeedRele(30000);
+      }
 
+      if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
+          if(MyRelaysPtr->CountTimeAftherRele3Activated(10000) == Ended){
+              Serial.println("I read sensors");
 
+              MySensorSharePtr->IrSensorRead();
+              MyUserServoPtr->ReadGerkon();
+              MyUserServoPtr->DjigDjig();
 
-if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
-  if(MyRelaysPtr->CountTimeAftherRele3Activated(10000) == Ended){
-        Serial.println("I read sensors");
-
-        MySensorSharePtr->IrSensorRead();
-        MyUserServoPtr->ReadGerkon();
-        MyUserServoPtr->DjigDjig();
-
-        if(MySensorSharePtr->GetShareCount() == 4){
-          //Всё ресет
-          MySensorSharePtr->ResetShareCount();
-          MyRelaysPtr->ResetRelaysSetting();
-          MyUserServoPtr->ResetMooveServo();
-          start = false;
-        }
-  }
-}
+              if(MySensorSharePtr->GetShareCount() == 4){
+                  //Всё ресет
+                  MySensorSharePtr->ResetShareCount();
+                  MyRelaysPtr->ResetRelaysSetting();
+                  MyUserServoPtr->ResetMooveServo();
+                  start = false;
+              }
+          }
+      }
 
   }
-
 
 }
 
