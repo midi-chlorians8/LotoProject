@@ -3,9 +3,9 @@
 
 const int8_t pinButtonStart = 4;
 
-
 const int8_t pinIrBallDetector = 8;
 
+const int8_t pinLaser = 3;
 
 enum StatesEndTime{
   NoEnded,
@@ -169,7 +169,7 @@ Relays *MyRelaysPtr = nullptr; // Cоздали указатель
 
 class SensorShare{
 private:
-  int sharCount = 0;
+  int sharCount = -1;
   bool canRead=true;
   bool isBeTimeZaxvat = false;
   unsigned long timingSensorWait=0;
@@ -179,8 +179,8 @@ public:
     //Прибавить к счётчику шаров +1
     //Подождать 500 мсек до следущего считывания 
     if(canRead == true){
-      if( digitalRead(pinIrBallDetector)== 0){
-
+      if( digitalRead(pinIrBallDetector)== 1){
+            digitalWrite(pinLaser,LOW);//Выключить лазер
             sharCount++;
             Serial.print("sharCount:"); Serial.println(sharCount);
             //Один раз захват текущее время
@@ -189,13 +189,20 @@ public:
               isBeTimeZaxvat = true;
             }
             //Один раз захват текущее время            //  c
+            if(sharCount!=4){
+            delay(1500);
+            }
+            else{
+              delay(270);
+            }
       }
       
       
     }
-    if(millis() - timingSensorWait > 500 and canRead == false){
+    if(millis() - timingSensorWait > 2000 and canRead == false){
       canRead = true;
       isBeTimeZaxvat = false;
+      digitalWrite(pinLaser,HIGH);//Включить лазер
     }
   }
   int GetShareCount(){
@@ -212,9 +219,10 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(pinButtonStart,INPUT_PULLUP);
- 
-
   pinMode(pinIrBallDetector,INPUT);
+
+  pinMode(pinLaser,OUTPUT);
+  digitalWrite(pinLaser,LOW);//Выключить лазер
 
   //InitMyServo(); // Создали обьект в области оперативной памяти куча heap
   MyUserServoPtr = new MyUserServo_Gercon(); // Создали обьект в области оперативной памяти куча heap
@@ -225,7 +233,46 @@ void setup() {
  
 bool start = false;
 
+// constants won't change. They're used here to set pin numbers:
+//const int buttonPin = 2;    // the number of the pushbutton pin
+const int ledPin = 13;      // the number of the LED pin
+
+// Variables will change:
+int ledState = HIGH;         // the current state of the output pin
+int buttonState;             // the current reading from the input pin
+int lastButtonState = LOW;   // the previous reading from the input pin
+
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
 void loop() {
+
+ int reading = digitalRead(pinButtonStart);
+  if (reading != lastButtonState) {
+    // reset the debouncing timer
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      // only toggle the LED if the new button state is HIGH
+      if (buttonState == LOW) {
+        ledState = !ledState;
+        start = true;
+        Serial.println("Button start pressed");
+      }
+    }
+  }
+
+  // set the LED:
+  digitalWrite(ledPin, ledState);
+
+  // save the reading. Next time through the loop, it'll be the lastButtonState:
+  lastButtonState = reading;
+
 
   if(digitalRead(pinButtonStart)==0){
     start = true;
@@ -242,11 +289,13 @@ void loop() {
 
       if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
           if(MyRelaysPtr->CountTimeAftherRele3Activated(10000) == Ended){
-              Serial.println("I read sensors");
+              Serial.print(" I read sensors "); 
 
               MySensorSharePtr->IrSensorRead();
               MyUserServoPtr->ReadGerkon();
               MyUserServoPtr->DjigDjig();
+
+             // digitalWrite(pinLaser,HIGH);//Включить лазер
 
               if(MySensorSharePtr->GetShareCount() == 4){
                   //Всё ресет
@@ -254,12 +303,15 @@ void loop() {
                   MyRelaysPtr->ResetRelaysSetting();
                   MyUserServoPtr->ResetMooveServo();
                   start = false;
+                  digitalWrite(pinLaser,LOW);//Выключить лазер
               }
           }
       }
 
   }
-
+Serial.print( " start:"); Serial.print( start); 
+Serial.print( " digitalRead(pinIrBallDetector):"); Serial.print( digitalRead(pinIrBallDetector) );
+Serial.print( " GetShareCount():"); Serial.print( MySensorSharePtr->GetShareCount() ); Serial.println();
 }
 
 
