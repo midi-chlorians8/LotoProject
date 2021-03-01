@@ -33,21 +33,21 @@ public:
   void DjigDjig(){ // 0-180 и обратно
 
         if(canMoove == true){
-                if ( (millis() - timingServo > 400) and stepServoMoove ==0){ // Вместо 10000 подставьте нужное вам значение паузы 
+                if ( (millis() - timingServo > 2400) and stepServoMoove ==0){ // Вместо 10000 подставьте нужное вам значение паузы 
                     myservo.write(5); 
                     stepServoMoove =1;
                     //Serial.println(F("stepWork = 1"));
                     Serial.println(F("servoPos 5^"));
                     timingServo = millis(); 
                 }
-                if ( (millis() - timingServo > 400) and stepServoMoove ==1){ // Вместо 10000 подставьте нужное вам значение паузы 
+                if ( (millis() - timingServo > 2400) and stepServoMoove ==1){ // Вместо 10000 подставьте нужное вам значение паузы 
                     myservo.write(175); 
                     stepServoMoove =2;
                     //Serial.println(F("stepWork = 2"));
                     Serial.println(F("servoPos 175^"));
                     timingServo = millis(); 
                 }
-                if ( (millis() - timingServo > 400) and stepServoMoove ==2){ // Вместо 10000 подставьте нужное вам значение паузы 
+                if ( (millis() - timingServo > 2400) and stepServoMoove ==2){ // Вместо 10000 подставьте нужное вам значение паузы 
                     myservo.write(5); 
                     stepServoMoove =0;
                     //Serial.println(F("stepWork = 3 ComeBack"));

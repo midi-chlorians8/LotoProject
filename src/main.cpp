@@ -102,14 +102,14 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
       MyRelaysPtr->OnPitDvigRele(); //Вкл реле до конца текущей игры
       //MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000);// !! должно работать без этой строки!! Начать считать время от запуска реле реле питания двигателя (20сек)
 
-      if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000) == EndedReleTime){
-          MyRelaysPtr->OnMoreSpeedRele(30000); //Вкл реле быстрого вращения на 30сек
+      if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(2000) == EndedReleTime){
+          MyRelaysPtr->OnMoreSpeedRele(3000); //Вкл реле быстрого вращения на 30сек
       }
     // Включаются - выключаются реле
 
     // Если прошло 10сек после откл реле высокой скорости то играем. Включается чтение датчиков. Считаются шары до 4х штук
       if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
-          if(MyRelaysPtr->CountTimeAftherRele3Activated(10000) == EndedReleTime){
+          if(MyRelaysPtr->CountTimeAftherRele3Activated(1000) == EndedReleTime){
               //Serial.print(F(" I read sensors ")); Serial.print(F( " GetShareCount():")); Serial.print( MySensorSharePtr->GetShareCount() ); Serial.println();
 
               MySensorSharePtr->IrSensorRead();
@@ -120,16 +120,13 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
 
               if(MySensorSharePtr->GetShareCount() == 4){
 
-                  // if(GetServoMooveEnded()==true){} // Если серва вернулась в исходное положение
-                  //Всё ресет
-                  MySensorSharePtr->ResetShareCount();
-                  MyRelaysPtr->ResetRelaysSetting();
-                  MyUserServoPtr->ResetMooveServo();
-                  //start = false;
-                  
-                  MyButtonStartPtr->SetResetButton();
-
-
+                   if(MyUserServoPtr->GetServoMooveEnded()==true){ // Если серва вернулась в исходное положение
+                        //Всё ресет
+                        MySensorSharePtr->ResetShareCount();
+                        MyRelaysPtr->ResetRelaysSetting();
+                        MyUserServoPtr->ResetMooveServo();               
+                        MyButtonStartPtr->SetResetButton();
+                   }                  
               }
           }
       }
