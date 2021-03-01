@@ -1,3 +1,5 @@
+
+
 Описание логики:
 Нажимается кнопка старт. Начинается текущая игра.
 
@@ -11,3 +13,16 @@
 При каждом срабатывании геркона происходит движение сервоприводом mg90s. 0 - 180 и обратно.
 
 После 4го срабатывания датчика припятствий(Прокатка шара мимо датчика) текущая игра завершается. Все реле отключаются. Настройки сбрасываются.
+
+Распиновка:
+const int8_t pinIrBallDetector = 8;
+const int8_t pinLaser = 3;
+
+const int8_t releElektromagnet = 7;
+const int8_t relePitDvig = 5;
+const int8_t releMoreSpeed = 10;
+
+const int8_t pinButtonStart = 4;
+
+const int8_t pinServo = 6;
+const int8_t pinGerkon = 2;
