@@ -4,10 +4,10 @@
 
 
 struct T_time{
-       int sec = 0; 
-       int min = 0;
-       int hour = 0;
-       int AverageMin = 0; // Всё время прошедшее в минутах
+       int8_t sec = 0; 
+       int8_t min = 0;
+       int8_t hour = 0;
+       //int AverageMin = 0; // Всё время прошедшее в минутах
 };
 
 class Timer{
@@ -34,7 +34,7 @@ public:
                         if (TimerTime.sec>59){
                             TimerTime.sec = 0;
                             TimerTime.min +=1;
-                            TimerTime.AverageMin +=1; // Пользуемся этим в таймере save eyes
+                            //TimerTime.AverageMin +=1; // Пользуемся этим в таймере save eyes
                             if (TimerTime.min>59){ //Cпециально вложил чтоб меньше проверок было за цикл. Быстрее работало
                                 TimerTime.min = 0;
                                 TimerTime.hour +=1;
@@ -58,7 +58,7 @@ public:
                 TimerTime.min=0;
                 TimerTime.hour=0;
 
-                TimerTime.AverageMin=0;
+                //TimerTime.AverageMin=0;
         }
 
     void Print(){   

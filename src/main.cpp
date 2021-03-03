@@ -1,22 +1,25 @@
 //01.03.2021+
+//03.03.2021 Добавляю софт перезагрузку после каждой игры
 #include <Arduino.h>
 #include "MyUserServo.h"
 #include "ButtonStart.h"
 #include "Relays.h"
 #include "Timer.h"
 
+void(* resetFunc) (void) = 0;//объявляем функцию reset с адресом 0
+
 class SensorShare{
 private:
   const int8_t pinIrBallDetector = 8;
   const int8_t pinLaser = 3;
 
-  int sharCount = -1;
+  int8_t sharCount = -1;
   bool canRead=true; // Будет ли читатся следующий шар
   bool isBeTimeZaxvat = false;
   unsigned long timingSensorWait=0;
 public:
   SensorShare(){
-      pinMode(pinIrBallDetector,INPUT_PULLUP);
+      pinMode(pinIrBallDetector,INPUT); // pinMode(pinIrBallDetector,INPUT_PULLUP);
       pinMode(pinLaser,OUTPUT);
       digitalWrite(pinLaser,LOW);//Выключить лазер
   }
@@ -27,7 +30,7 @@ public:
 
     if(canRead == true){
       if( digitalRead(pinIrBallDetector)== 0){ 
-            digitalWrite(pinLaser,LOW);//Выключить лазер
+            //digitalWrite(pinLaser,LOW);//Выключить лазер
             sharCount++;
             Serial.print(F("sharCount:")); Serial.println(sharCount);
 
@@ -52,7 +55,7 @@ public:
       canRead = true;
       isBeTimeZaxvat = false;
       digitalWrite(pinLaser,HIGH);//Включить лазер
-       Serial.println(F("I read other shars:")); 
+      Serial.println(F("I read other shars:")); 
     }
   }
   int GetShareCount(){
@@ -70,7 +73,9 @@ SensorShare *MySensorSharePtr = nullptr; // Cоздали указатель
 
 void setup() {
 
-  Serial.begin(115200);delay(50);
+  Serial.begin(115200);
+  
+  delay(50);
   Serial.println(F("Progaramm started\n"));//Serial.println();
 
   //InitMyServo(); // Создали обьект в области оперативной памяти куча heap
@@ -82,6 +87,7 @@ void setup() {
   MyTimerPtr = new Timer();
 }
  
+bool oneRazOnLaser = false; // Чтоб включить один раз лазер когда отыграют реле
 
 void loop() {
 if(MyButtonStartPtr->GetIsPressed() == false){//Если кнопка не была нажата то
@@ -111,12 +117,20 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
       if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
           if(MyRelaysPtr->CountTimeAftherRele3Activated(1000) == EndedReleTime){
               //Serial.print(F(" I read sensors ")); Serial.print(F( " GetShareCount():")); Serial.print( MySensorSharePtr->GetShareCount() ); Serial.println();
-
+              
+              // Один раз включить лазер и сделать задержку
+              if (oneRazOnLaser == false){
+                  digitalWrite(3,HIGH);//Включить лазер
+                  delay(20);   
+                  oneRazOnLaser = true;
+              }
+              // Один раз включить лазер и сделать задержку
+              
               MySensorSharePtr->IrSensorRead();
               MyUserServoPtr->ReadGerkon();
               MyUserServoPtr->DjigDjig();
 
-             // digitalWrite(pinLaser,HIGH);//Включить лазер
+              
 
               if(MySensorSharePtr->GetShareCount() == 4){
 
@@ -126,6 +140,14 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
                         MyRelaysPtr->ResetRelaysSetting();
                         MyUserServoPtr->ResetMooveServo();               
                         MyButtonStartPtr->SetResetButton();
+                        oneRazOnLaser = false;
+
+                        delete MyUserServoPtr;
+                        delete MyRelaysPtr;
+                        delete MySensorSharePtr;
+                        delete MyButtonStartPtr;
+                        delete MyTimerPtr;
+                        resetFunc(); //вызываем reset
                    }                  
               }
           }
