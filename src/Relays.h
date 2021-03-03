@@ -52,7 +52,7 @@ public:
   {
       pinMode(releElektromagnet,OUTPUT);
       pinMode(relePitDvig,OUTPUT);
-      pinMode(releMoreSpeed,OUTPUT);digitalWrite(releMoreSpeed,HIGH);
+      pinMode(releMoreSpeed,OUTPUT);//digitalWrite(releMoreSpeed,HIGH);
       
   }
   void OnElektromagnetRele(uint16_t delayElektromagnetReleWork){
@@ -104,13 +104,13 @@ public:
   void OnMoreSpeedRele(uint16_t delayMoreSpeedReleWork){
       if(canOnMoreSpeedRele == true){
           if(firsTimeZamerMoreSpeedRele == false){ // Захватили момет старт отсчёта 
-                digitalWrite(releMoreSpeed,LOW);//Включить реле                                  digitalWrite(releMoreSpeed,HIGH);
+                digitalWrite(releMoreSpeed,HIGH);//Включить реле                                  digitalWrite(releMoreSpeed,HIGH);
                 Serial.println(F("MoreSpeed Rele On"));
                 timingMoreSpeedRele = millis();
             firsTimeZamerMoreSpeedRele = true;
           }  
           if(millis() - timingMoreSpeedRele > delayMoreSpeedReleWork){
-            digitalWrite(releMoreSpeed,HIGH);//Выключить реле                                   //digitalWrite(releMoreSpeed,LOW);
+            digitalWrite(releMoreSpeed,LOW);//Выключить реле                                   //digitalWrite(releMoreSpeed,LOW);
             Serial.println(F("MoreSpeed Rele Off"));
             canOnMoreSpeedRele = false;
           }
