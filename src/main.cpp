@@ -1,5 +1,6 @@
 //01.03.2021+
 //03.03.2021 Добавляю софт перезагрузку после каждой игры
+//+
 #include <Arduino.h>
 #include "MyUserServo.h"
 #include "ButtonStart.h"
