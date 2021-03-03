@@ -13,7 +13,7 @@ private:
   const int8_t pinIrBallDetector = 8;
   const int8_t pinLaser = 3;
 
-  int8_t sharCount = -1;
+  int8_t sharCount = 0;
   bool canRead=true; // Будет ли читатся следующий шар
   bool isBeTimeZaxvat = false;
   unsigned long timingSensorWait=0;
@@ -29,7 +29,7 @@ public:
  // Serial.print(F("digitalRead(pinIrBallDetector):")); Serial.println(digitalRead(pinIrBallDetector));
 
     if(canRead == true){
-      if( digitalRead(pinIrBallDetector)== 0){ 
+      if( digitalRead(pinIrBallDetector)== 1){ 
             //digitalWrite(pinLaser,LOW);//Выключить лазер
             sharCount++;
             Serial.print(F("sharCount:")); Serial.println(sharCount);
@@ -85,11 +85,16 @@ void setup() {
   MyButtonStartPtr = new ButtonStart(20);
 
   MyTimerPtr = new Timer();
+
+  pinMode(3,OUTPUT);
+  // digitalWrite(3,HIGH); // Лазер
 }
  
 bool oneRazOnLaser = false; // Чтоб включить один раз лазер когда отыграют реле
 
 void loop() {
+  //Serial.print("digitalRead(pinIrBallDetector):");
+  //Serial.println( digitalRead(8) );
 if(MyButtonStartPtr->GetIsPressed() == false){//Если кнопка не была нажата то
     MyButtonStartPtr->Read(); //Читаем постоянно кнопку старт
 }
@@ -141,12 +146,15 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
                         MyUserServoPtr->ResetMooveServo();               
                         MyButtonStartPtr->SetResetButton();
                         oneRazOnLaser = false;
-
+                        digitalWrite(3,LOW); //Лазер выкл
+                        delay(10);
+/*
                         delete MyUserServoPtr;
                         delete MyRelaysPtr;
                         delete MySensorSharePtr;
                         delete MyButtonStartPtr;
                         delete MyTimerPtr;
+                        */
                         resetFunc(); //вызываем reset
                    }                  
               }
