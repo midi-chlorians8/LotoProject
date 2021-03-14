@@ -110,18 +110,18 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
 
     // Включаются - выключаются реле
       MyRelaysPtr->OnElektromagnetRele(500); //Вкл реле электромагнит на 500мсек
+      MyRelaysPtr->OnPitDvigRele(); //Вкл реле питания двигателя до конца текущей игры
 
-      MyRelaysPtr->OnPitDvigRele(); //Вкл реле до конца текущей игры
-      //MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000);// !! должно работать без этой строки!! Начать считать время от запуска реле реле питания двигателя (20сек)
-
-      if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000) == EndedReleTime){
+      if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(5000) == EndedReleTime){ // Когда прошло 5 сек после Вкл реле питания двигателя,
           MyRelaysPtr->OnMoreSpeedRele(30000); //Вкл реле быстрого вращения на 30сек
       }
     // Включаются - выключаются реле
 
-    // Если прошло 10сек после откл реле высокой скорости то играем. Включается чтение датчиков. Считаются шары до 4х штук
+//через 5 сек то включается серва
+
+    // Если прошло 5сек после откл реле высокой скорости то играем. Включается чтение датчиков. Считаются шары до 4х штук
       if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
-          if(MyRelaysPtr->CountTimeAftherRele3Activated(10000) == EndedReleTime){
+          if(MyRelaysPtr->CountTimeAftherRele3Activated(5000) == EndedReleTime){
               //Serial.print(F(" I read sensors ")); Serial.print(F( " GetShareCount():")); Serial.print( MySensorSharePtr->GetShareCount() ); Serial.println();
               
               // Один раз включить лазер и сделать задержку
@@ -136,8 +136,6 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
               MyUserServoPtr->ReadGerkon();
               MyUserServoPtr->DjigDjig();
 
-              
-
               if(MySensorSharePtr->GetShareCount() == 4){
 
                    if(MyUserServoPtr->GetServoMooveEnded()==true){ // Если серва вернулась в исходное положение
@@ -149,7 +147,7 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
                         oneRazOnLaser = false;
                         digitalWrite(3,LOW); //Лазер выкл
                         delay(10);
-/*
+                        /*
                         delete MyUserServoPtr;
                         delete MyRelaysPtr;
                         delete MySensorSharePtr;
