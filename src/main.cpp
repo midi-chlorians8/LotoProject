@@ -1,3 +1,5 @@
+// 5 sec litle sped ,15 sec speed fast, 5 sec little
+
 //01.03.2021+
 //03.03.2021 Добавляю софт перезагрузку после каждой игры
 //+
@@ -30,7 +32,7 @@ public:
  // Serial.print(F("digitalRead(pinIrBallDetector):")); Serial.println(digitalRead(pinIrBallDetector));
 
     if(canRead == true){
-      if( digitalRead(pinIrBallDetector)== 1){ 
+      if( digitalRead(pinIrBallDetector)== 1){
             //digitalWrite(pinLaser,LOW);//Выключить лазер
             sharCount++;
             Serial.print(F("sharCount:")); Serial.println(sharCount);
@@ -38,25 +40,25 @@ public:
             //Один раз захват текущее время
             if(isBeTimeZaxvat == false){
                   timingSensorWait = millis(); canRead = false;
-                  Serial.println(F("I not read other shars 2sec:")); 
+                  Serial.println(F("I not read other shars 2sec:"));
               isBeTimeZaxvat = true;
             }
-            //Один раз захват текущее время            //  
+            //Один раз захват текущее время            //
             if(sharCount!=4){
               //delay(1500);
             }
             else{
-              delay(270);
+              delay(500);
             }
       }
-      
-      
+
+
     }
     if(millis() - timingSensorWait > 2000 and canRead == false){ // Если прошло уже 2сек и луч был прерван
       canRead = true;
       isBeTimeZaxvat = false;
       digitalWrite(pinLaser,HIGH);//Включить лазер
-      Serial.println(F("I read other shars:")); 
+      Serial.println(F("I read other shars:"));
     }
   }
   int GetShareCount(){
@@ -75,7 +77,7 @@ SensorShare *MySensorSharePtr = nullptr; // Cоздали указатель
 void setup() {
 
   Serial.begin(115200);
-  
+
   delay(50);
   Serial.println(F("Progaramm started\n"));//Serial.println();
 
@@ -90,10 +92,11 @@ void setup() {
   pinMode(3,OUTPUT);
   // digitalWrite(3,HIGH); // Лазер
 }
- 
+
 bool oneRazOnLaser = false; // Чтоб включить один раз лазер когда отыграют реле
 
 void loop() {
+
   //Serial.print("digitalRead(pinIrBallDetector):");
   //Serial.println( digitalRead(8) );
 if(MyButtonStartPtr->GetIsPressed() == false){//Если кнопка не была нажата то
@@ -110,31 +113,33 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
 
     // Включаются - выключаются реле
       MyRelaysPtr->OnElektromagnetRele(500); //Вкл реле электромагнит на 500мсек
-      MyRelaysPtr->OnPitDvigRele(); //Вкл реле питания двигателя до конца текущей игры
 
-      if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(5000) == EndedReleTime){ // Когда прошло 5 сек после Вкл реле питания двигателя,
-          MyRelaysPtr->OnMoreSpeedRele(30000); //Вкл реле быстрого вращения на 30сек
+      MyRelaysPtr->OnPitDvigRele(); //Вкл реле до конца текущей игры
+      //MyRelaysPtr->CountTimeAftherOnPitDvigRele(20000);// !! должно работать без этой строки!! Начать считать время от запуска реле реле питания двигателя (20сек)
+
+      if(MyRelaysPtr->CountTimeAftherOnPitDvigRele(5000) == EndedReleTime){  // If time afther
+          MyRelaysPtr->OnMoreSpeedRele(15000); //Вкл реле быстрого вращения на 30сек
       }
     // Включаются - выключаются реле
 
-//через 5 сек то включается серва
-
-    // Если прошло 5сек после откл реле высокой скорости то играем. Включается чтение датчиков. Считаются шары до 4х штук
+    // Если прошло 5 сек после откл реле высокой скорости то играем. Включается чтение датчиков. Считаются шары до 4х штук
       if(MyRelaysPtr->OnMoreSpeedReleWorkEnd()==true){
           if(MyRelaysPtr->CountTimeAftherRele3Activated(5000) == EndedReleTime){
               //Serial.print(F(" I read sensors ")); Serial.print(F( " GetShareCount():")); Serial.print( MySensorSharePtr->GetShareCount() ); Serial.println();
-              
+
               // Один раз включить лазер и сделать задержку
               if (oneRazOnLaser == false){
                   digitalWrite(3,HIGH);//Включить лазер
-                  delay(20);   
+                  delay(20);
                   oneRazOnLaser = true;
               }
               // Один раз включить лазер и сделать задержку
-              
+
               MySensorSharePtr->IrSensorRead();
               MyUserServoPtr->ReadGerkon();
               MyUserServoPtr->DjigDjig();
+
+
 
               if(MySensorSharePtr->GetShareCount() == 4){
 
@@ -142,12 +147,12 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
                         //Всё ресет
                         MySensorSharePtr->ResetShareCount();
                         MyRelaysPtr->ResetRelaysSetting();
-                        MyUserServoPtr->ResetMooveServo();               
+                        MyUserServoPtr->ResetMooveServo();
                         MyButtonStartPtr->SetResetButton();
                         oneRazOnLaser = false;
                         digitalWrite(3,LOW); //Лазер выкл
                         delay(10);
-                        /*
+/*
                         delete MyUserServoPtr;
                         delete MyRelaysPtr;
                         delete MySensorSharePtr;
@@ -155,14 +160,14 @@ if(MyButtonStartPtr->GetIsPressed() == true){ //Если состояние кн
                         delete MyTimerPtr;
                         */
                         resetFunc(); //вызываем reset
-                   }                  
+                   }
               }
           }
       }
     // Если прошло 10сек после откл реле высокой скорости то играем. Включается чтение датчиков. Считаются шары до 4х штук
 
   }
-//Serial.print( " MyButtonStartPtr->GetIsPressed():"); Serial.print(MyButtonStartPtr->GetIsPressed()  ); 
+//Serial.print( " MyButtonStartPtr->GetIsPressed():"); Serial.print(MyButtonStartPtr->GetIsPressed()  );
 //Serial.print( " digitalRead(pinIrBallDetector):"); Serial.print( digitalRead(pinIrBallDetector) );
 
 //Serial.print( " GetShareCount():"); Serial.print( MySensorSharePtr->GetShareCount() ); Serial.println();

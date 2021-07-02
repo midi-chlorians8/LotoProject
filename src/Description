@@ -15,7 +15,7 @@
 После 4го срабатывания датчика припятствий(Прокатка шара мимо датчика) текущая игра завершается. Все реле отключаются. Настройки сбрасываются.
 
 Распиновка:
-const int8_t pinIrBallDetector = 8;
+const int8_t pinBallDetector = 8;
 const int8_t pinLaser = 3;
 
 const int8_t releElektromagnet = 7;
